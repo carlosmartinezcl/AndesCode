@@ -8,7 +8,6 @@ Asistente de arquitectura de software senior que corre localmente en tu máquina
 - Python con Type Hints, TypeScript con tipado estricto
 - PostgreSQL con índices, constraints y tipos correctos
 - Código documentado en español
-- Avisa si falta alguna dependencia o configuración de entorno
 
 ---
 
@@ -94,7 +93,7 @@ Escribe tus preguntas libremente. Para salir: `Ctrl + D` o `/exit`.
 ### One-liner (respuesta rápida)
 
 ```bash
-andes "Carlos, diseña un esquema de tablas para un blog en PostgreSQL siguiendo la 3ra forma normal."
+andes "Andes, diseña un esquema de tablas para un blog en PostgreSQL siguiendo la 3ra forma normal."
 ```
 
 ### Pasar un archivo para revisión
@@ -169,10 +168,3 @@ La primera respuesta puede tardar unos segundos mientras el i9 mueve los pesos d
 3. **Git antes de sobrescribir:** Antes de dejar que Andes Code escriba sobre un archivo existente, asegúrate de tener un `git commit` hecho. Si algo sale mal, `git checkout` es tu salvavidas.
 
 ---
-
-## PostgreSQL: Workaround vs Best Practice
-
-| | Enfoque | Cuándo usarlo |
-|---|---|---|
-| ⚡ | **Instalación directa** (`sudo apt install postgresql`) | Prototipado rápido, no importa ensuciar el sistema host |
-| ✅ | **Docker Compose** | Proyectos reales — levanta y destruye la DB sin residuos en Ubuntu 24.04 |
