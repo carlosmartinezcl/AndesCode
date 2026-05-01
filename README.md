@@ -1,121 +1,178 @@
-# Protocolo para Andes Code
+# Andes Code
 
-Andes Code es tu asistente de arquitectura de software senior. Puedes inter[5D[K
-interactuar con él de varias formas:
+Asistente de arquitectura de software senior que corre localmente en tu máquina, sin enviar código a servidores externos. Basado en `qwen2.5-coder:14b` con personalidad y reglas de arquitectura fijadas mediante un System Prompt.
 
-1. **Modo Interactivo (Chat directo)**
-   - Bash: `ollama run arquitecto-senior`
-   - Una vez dentro, puedes escribir tus dudas.
-   - Para salir, usa Ctrl + D o escribe `/exit`.
+**Reglas de oro que aplica automáticamente:**
+- Patrones de diseño: Repository, Factory, DTOs
+- Clean Architecture (Dominio → Aplicación → Infraestructura)
+- Python con Type Hints, TypeScript con tipado estricto
+- PostgreSQL con índices, constraints y tipos correctos
+- Código documentado en español
+- Avisa si falta alguna dependencia o configuración de entorno
 
-2. **Modo de Comando Único (One-liner)**
-   - Ideal si solo quieres una respuesta rápida sin entrar al prompt intera[6D[K
-interactivo:
-     - Bash: `ollama run arquitecto-senior "Carlos, diseña un esquema de ta[2D[K
-tablas para un blog en PostgreSQL siguiendo la 3ra forma normal."`
+---
 
-3. **Inyección de Contexto (Piping)**
-   - Como estás trabajando en VS Code, puedes usar la terminal integrada pa[2D[K
-para pasarle archivos de código a Andes Code.
-   - Analizar un archivo de Python:
-     - Bash: `cat src/models/user.py | ollama run arquitecto-senior "Andes [K
-Code, revisa este modelo y dime si cumple con SOLID."`
-   - Refactorizar un script completo:
-     - Bash: `cat viejo_script.js | ollama run arquitecto-senior "Refactori[10D[K
-"Refactoriza este código a TypeScript usando interfaces y documenta en espa[4D[K
-español." > nuevo_script.ts`
+## Requisitos
 
-4. **Automatización: El Alias de Arquitecto**
-   - Para que no tengas que escribir comandos largos, vamos a crear un alia[4D[K
-alias en tu `.bashrc`.
-     - Abre tu configuración de Bash: `nano ~/.bashrc`
-     - Ve al final del archivo y pega esto:
-       ```bash
-       # Alias para Andes Code (Arquitecto Senior)
-       alias andes='ollama run arquitecto-senior'
+| Componente | Detalle |
+|---|---|
+| **GPU** | RTX 4070 (8 GB VRAM) o superior |
+| **RAM** | 16 GB mínimo (el modelo carga ~9 GB) |
+| **CPU** | i9 o equivalente (para mover pesos RAM → VRAM al inicio) |
+| **OS** | Ubuntu 24.04 (o cualquier distro con soporte Ollama) |
+| **Ollama** | `curl -fsSL https://ollama.com/install.sh \| sh` |
+| **Modelo base** | `ollama pull qwen2.5-coder:14b` |
 
-       # Función para que Andes Code lea un archivo y una instrucción
-       andes-revisa() {
-           cat "$1" | ollama run arquitecto-senior "$2"
-       }
-       ```
-     - Recarga la configuración: `source ~/.bashrc`
-   - Ahora puedes usarlo así:
-     - `andes "Hola, soy Carlos, necesito un DTO en Java Script"`
-     - `andes-revisa api.py "Optimiza las queries de Postgres en este archi[5D[K
-archivo"`
+---
 
-5. **Monitoreo de Rendimiento (Senior Tip)**
-   - Mientras Andes Code genera código complejo (como el de 14B), abre una [K
-terminal dividida en VS Code y lanza esto:
-     - Bash: `watch -n 0.5 nvidia-smi`
-   - Verás cómo los 8GB de tu RTX 4070 entran en acción. Si notas que la re[2D[K
-respuesta tarda un poco al inicio, es normal: el i9 está moviendo los pesos[5D[K
-pesos del modelo de la RAM a la VRAM. Una vez cargado, la velocidad de escr[4D[K
-escritura (tokens por segundo) será excelente.
+## Instalación
 
-**Regla de Oro para Carlos:**
-- Cuando le pases código por terminal mediante `cat`, asegúrate de que el a[1D[K
-archivo no sea excesivamente gigante (más de 15k líneas), aunque configuram[10D[K
-configuramos 32k de contexto, para que la respuesta sea ágil y no desborde [K
-tu memoria.
+### 1. Descargar el modelo base
 
-### Crear archivos nuevos desde cero
-- Si necesitas que Andes Code cree un archivo de instrucciones o un nuevo m[1D[K
-módulo, usa el operador `>` (sobrescribir/crear).
-  - Ejemplo: Crear un archivo de instrucciones Markdown
-    - Bash: `andes "Andes Code, crea un archivo de instrucciones técnico en[2D[K
-en Markdown para configurar el esquema de PostgreSQL de nuestro proyecto. C[1D[K
-Carlos." > INSTRUCCIONES_DB.md`
-  - Ejemplo: Crear un archivo de Python con arquitectura limpia
-    - Bash: `andes "Crea el archivo domain/models.py con la entidad Proyect[7D[K
-Proyecto usando Type Hints. Carlos." > domain/models.py`
+```bash
+ollama pull qwen2.5-coder:14b
+```
 
-### Editar o añadir contenido (Append)
-- Si quieres agregar algo al final de un archivo existente sin borrar lo an[2D[K
-anterior, usa `>>`.
-  - Bash: `andes "Agrega una sección al final del README.md explicando cómo[4D[K
-cómo correr los tests con pytest. Carlos." >> README.md`
+### 2. Compilar el modelo personalizado
 
-### La técnica del "Arquitecto Revisor" (Lectura + Escritura)
-- Esta es la más potente. Le pasas un archivo, le pides que lo mejore y gua[3D[K
-guardas el resultado en un archivo nuevo (o el mismo).
-  - Refactorizar y guardar:
-    - Bash: `cat auth.py | andes "Andes Code, refactoriza este código usand[5D[K
-usando el patrón Decorator para el manejo de logs. Carlos." > auth_refactor[13D[K
-auth_refactorizado.py`
+Desde la carpeta de este proyecto:
 
-### Herramienta Senior: El script andes-save
-- Para que no tengas que escribir redirecciones largas, vamos a mejorar tus[3D[K
-tus alias en el `.bashrc`. Vamos a crear una función que limpie la salida ([1D[K
-(por si el modelo añade texto extra) y guarde el código.
-  - Añade esto a tu `~/.bashrc`:
-    ```bash
-    # Función para que Andes Code cree archivos directamente
-    andes-crea() {
-        # $1 es el nombre del archivo, $2 es la instrucción
-        echo "--- Andes Code está trabajando en $1 ---"
-        ollama run arquitecto-senior "Carlos, aquí tienes el código para $1[2D[K
-$1. Genera SOLO el contenido del archivo sin charlas previas ni bloques de [K
-markdown (sin http://googleusercontent.com/immersive_entry_chip/0)"
-    }
-    ```
-  - Luego ejecuta `source ~/.bashrc`.
-  
-**Uso:**
-- `andes-crea "database.ts" "Crea la conexión a PostgreSQL usando el patrón[6D[K
-patrón Singleton"`
+```bash
+ollama create arquitecto-senior -f ArchitectModel
+```
 
-### Advertencias de Arquitecto (Best Practices)
-1. **Cuidado con el "Markdown Wrapper":** A veces los modelos encierran el [K
-código en bloques ```python ... ```. Si usas el redireccionamiento directo [K
-(`>`), esos caracteres se guardarán en el archivo y darán error de sintaxis[8D[K
-sintaxis. Por eso en la función de arriba le pedimos que genere **solo** el[2D[K
-el contenido.
-2. **Backups con Git:** Carlos, regla de oro: antes de dejar que una IA esc[3D[K
-escriba sobre tus archivos, asegúrate de tener un `git commit` hecho. Si el[2D[K
-el modelo se equivoca y sobrescribe algo importante, `git checkout` será tu[2D[K
-tu salvavidas.
-3. **Archivos `.md` de instrucciones:** Para esto Andes Code es brillante. [K
-Puede generarte guías de despliegue, documentación de API o manuales de usu[3D[K
-usuario en segundos.
+Esto registra el modelo `arquitecto-senior` en Ollama con temperatura baja (`0.2`) y contexto de 32k tokens.
+
+### 3. Verificar que quedó instalado
+
+```bash
+ollama list
+```
+
+Deberías ver `arquitecto-senior` en la lista.
+
+### 4. Configurar los alias (opcional pero recomendado)
+
+Abre `~/.bashrc` y agrega al final:
+
+```bash
+# Andes Code — alias principal
+alias andes='ollama run arquitecto-senior'
+
+# Andes Code — pasar un archivo con una instrucción
+andes-revisa() {
+    cat "$1" | ollama run arquitecto-senior "$2"
+}
+
+# Andes Code — generar un archivo nuevo directamente
+andes-crea() {
+    echo "--- Andes Code está trabajando en $1 ---"
+    ollama run arquitecto-senior "Carlos, genera SOLO el contenido del archivo $1 sin charlas previas ni bloques de markdown. Instrucción: $2" > "$1"
+}
+```
+
+Recarga la configuración:
+
+```bash
+source ~/.bashrc
+```
+
+---
+
+## Uso
+
+### Modo interactivo (chat directo)
+
+```bash
+ollama run arquitecto-senior
+# o con el alias:
+andes
+```
+
+Escribe tus preguntas libremente. Para salir: `Ctrl + D` o `/exit`.
+
+### One-liner (respuesta rápida)
+
+```bash
+andes "Carlos, diseña un esquema de tablas para un blog en PostgreSQL siguiendo la 3ra forma normal."
+```
+
+### Pasar un archivo para revisión
+
+```bash
+# Revisar si cumple SOLID
+andes-revisa src/models/user.py "Revisa este modelo y dime si cumple con SOLID."
+
+# Revisar queries de base de datos
+andes-revisa api.py "Optimiza las queries de Postgres en este archivo."
+```
+
+### Refactorizar y guardar el resultado
+
+```bash
+# Guardar en un archivo nuevo
+cat auth.py | andes "Refactoriza este código usando el patrón Decorator para manejo de logs. Carlos." > auth_refactorizado.py
+
+# Traducir a TypeScript
+cat viejo_script.js | andes "Refactoriza este código a TypeScript usando interfaces y documenta en español." > nuevo_script.ts
+```
+
+### Crear un archivo desde cero
+
+```bash
+andes-crea "domain/models.py" "Crea la entidad Proyecto con Type Hints y patrón Repository."
+andes-crea "database.ts" "Crea la conexión a PostgreSQL usando el patrón Singleton."
+```
+
+### Agregar contenido a un archivo existente
+
+```bash
+andes "Agrega una sección al final del README.md explicando cómo correr los tests con pytest. Carlos." >> README.md
+```
+
+---
+
+## Estructura de proyecto recomendada
+
+Cuando le pidas diseñar un backend, Andes Code seguirá esta estructura de **Arquitectura Hexagonal**:
+
+```
+src/
+├── domain/            # Reglas de negocio puras (Entidades)
+├── application/       # Casos de uso (Lógica de la aplicación)
+├── infrastructure/    # Implementaciones técnicas
+│   ├── persistence/   # Repositorios (SQLAlchemy o Prisma/TypeORM)
+│   └── http/          # Controladores (FastAPI o Express/NestJS)
+└── main.py            # Punto de entrada y composición (DI Container)
+```
+
+---
+
+## Monitoreo de GPU
+
+Mientras Andes Code genera código complejo, abre una terminal dividida y ejecuta:
+
+```bash
+watch -n 0.5 nvidia-smi
+```
+
+La primera respuesta puede tardar unos segundos mientras el i9 mueve los pesos del modelo de RAM a VRAM. Una vez cargado, la velocidad de escritura (tokens/segundo) será fluida.
+
+---
+
+## Advertencias
+
+1. **Markdown Wrapper:** A veces el modelo envuelve el código en bloques ` ```python ... ``` `. Si usas `>` para guardar directamente, esos caracteres quedarán en el archivo y darán error de sintaxis. La función `andes-crea` ya instruye al modelo para evitarlo.
+
+2. **Límite de contexto:** El modelo tiene 32k tokens de contexto. Evita pasar archivos de más de ~15k líneas para que la respuesta sea ágil.
+
+3. **Git antes de sobrescribir:** Antes de dejar que Andes Code escriba sobre un archivo existente, asegúrate de tener un `git commit` hecho. Si algo sale mal, `git checkout` es tu salvavidas.
+
+---
+
+## PostgreSQL: Workaround vs Best Practice
+
+| | Enfoque | Cuándo usarlo |
+|---|---|---|
+| ⚡ | **Instalación directa** (`sudo apt install postgresql`) | Prototipado rápido, no importa ensuciar el sistema host |
+| ✅ | **Docker Compose** | Proyectos reales — levanta y destruye la DB sin residuos en Ubuntu 24.04 |
